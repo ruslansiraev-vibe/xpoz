@@ -56,28 +56,33 @@
         <button type="submit">Применить</button>
     </form>
 
-    <div class="column-filter-panel">
+    <div class="column-filter-panel" id="column-filter-panel">
         <div class="column-filter-toolbar">
-            <div>
-                <div class="column-filter-title">Доп. фильтр: колонки таблицы</div>
-                <div class="muted column-filter-hint">Галочка = показывать столбец. Сохраняется только в этом браузере.</div>
-            </div>
+            <button type="button" class="column-filter-toggle-btn" id="cols-panel-toggle" aria-expanded="true" aria-controls="cols-panel-body">
+                <span class="column-filter-toggle-icon" aria-hidden="true">▾</span>
+                <div>
+                    <div class="column-filter-title">Доп. фильтр: колонки таблицы</div>
+                    <div class="muted column-filter-hint" id="cols-panel-hint">Галочка = показывать столбец. Сохраняется только в этом браузере.</div>
+                </div>
+            </button>
             <button type="button" class="ghost-button tiny-btn" id="cols-reset-default">По умолчанию (все)</button>
         </div>
-        <ul class="column-filter-list" aria-label="Видимость колонок">
-            {% for col in results_table_columns %}
-            <li class="column-filter-row">
-                <input
-                    type="checkbox"
-                    class="column-toggle"
-                    id="result-col-{{ loop.index0 }}"
-                    data-column="{{ col }}"
-                    checked
-                >
-                <label class="column-filter-name" for="result-col-{{ loop.index0 }}">{{ col }}</label>
-            </li>
-            {% endfor %}
-        </ul>
+        <div id="cols-panel-body">
+            <ul class="column-filter-list" aria-label="Видимость колонок">
+                {% for col in results_table_columns %}
+                <li class="column-filter-row">
+                    <input
+                        type="checkbox"
+                        class="column-toggle"
+                        id="result-col-{{ loop.index0 }}"
+                        data-column="{{ col }}"
+                        checked
+                    >
+                    <label class="column-filter-name" for="result-col-{{ loop.index0 }}">{{ col }}</label>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 
     <div id="results-table-panel">
@@ -177,6 +182,36 @@
                 input.checked = true;
             });
             applyTableVisibility();
+        });
+    }
+
+    // Collapse / expand panel
+    var LS_COLLAPSED = 'xpoz_cols_panel_collapsed';
+    var panelToggleBtn = document.getElementById('cols-panel-toggle');
+    var panelBody = document.getElementById('cols-panel-body');
+    var panelHint = document.getElementById('cols-panel-hint');
+    var toggleIcon = panelToggleBtn ? panelToggleBtn.querySelector('.column-filter-toggle-icon') : null;
+
+    var filterPanel = document.getElementById('column-filter-panel');
+
+    function setPanelCollapsed(collapsed) {
+        if (!panelBody || !panelToggleBtn) return;
+        panelBody.style.display = collapsed ? 'none' : '';
+        panelToggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        if (toggleIcon) toggleIcon.textContent = collapsed ? '▸' : '▾';
+        if (panelHint) panelHint.style.display = collapsed ? 'none' : '';
+        if (filterPanel) filterPanel.classList.toggle('is-collapsed', collapsed);
+        try { localStorage.setItem(LS_COLLAPSED, collapsed ? '1' : '0'); } catch (e) { /* ignore */ }
+    }
+
+    var initCollapsed = false;
+    try { initCollapsed = localStorage.getItem(LS_COLLAPSED) === '1'; } catch (e) { /* ignore */ }
+    setPanelCollapsed(initCollapsed);
+
+    if (panelToggleBtn) {
+        panelToggleBtn.addEventListener('click', function () {
+            var isCollapsed = panelBody.style.display === 'none';
+            setPanelCollapsed(!isCollapsed);
         });
     }
 })();

@@ -624,7 +624,7 @@ def results_page(
     try:
         rows, total = sqlite_client.list_results(
             page=page,
-            page_size=25,
+            page_size=100,
             search=search,
             quick_filter=quick_filter,
             sort_by=sort_by,
@@ -639,7 +639,7 @@ def results_page(
             "rows": rows,
             "total": total,
             "page": page,
-            "page_size": 25,
+            "page_size": 100,
             "search": search,
             "quick_filter": quick_filter,
             "sort_by": sort_by,
@@ -669,7 +669,7 @@ def partial_results_table(
     try:
         rows, total = sqlite_client.list_results(
             page=page,
-            page_size=25,
+            page_size=100,
             search=search,
             quick_filter=quick_filter,
             sort_by=sort_by,
@@ -684,7 +684,7 @@ def partial_results_table(
             "rows": rows,
             "total": total,
             "page": page,
-            "page_size": 25,
+            "page_size": 100,
             "search": search,
             "quick_filter": quick_filter,
             "sort_by": sort_by,

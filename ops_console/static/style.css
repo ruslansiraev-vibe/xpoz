@@ -380,6 +380,39 @@ select {
     margin-bottom: 10px;
 }
 
+.column-filter-toggle-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    flex: 1;
+    min-width: 0;
+}
+
+#cols-panel-body {
+    width: 100%;
+}
+
+.column-filter-toggle-btn:hover .column-filter-title {
+    text-decoration: underline;
+}
+
+.column-filter-toggle-icon {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--muted, #888);
+    flex-shrink: 0;
+}
+
+#column-filter-panel.is-collapsed .column-filter-toolbar {
+    margin-bottom: 0;
+}
+
 .column-filter-title {
     font-weight: 600;
     color: var(--text);
