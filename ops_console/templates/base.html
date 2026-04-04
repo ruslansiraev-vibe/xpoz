@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="shell">
+        {% if current_user %}
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">Internal Tool</div>
+                <h1>{{ app_title }}</h1>
+            </div>
+            <nav class="nav">
+                <a href="/runs" class="{% if request.url.path.startswith('/runs') %}active{% endif %}">Запуски</a>
+                <a href="/results" class="{% if request.url.path.startswith('/results') %}active{% endif %}">Данные</a>
+                <span class="user-pill">{{ current_user }}</span>
+                <form method="post" action="/logout">
+                    <button type="submit" class="ghost-button">Выйти</button>
+                </form>
+            </nav>
+        </header>
+        {% endif %}
+
+        {% if flash %}
+        <div class="flash flash-{{ flash.level }}">{{ flash.message }}</div>
+        {% endif %}
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card">
+            <button class="modal-close" data-close-modal>&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+    function refreshSection(el) {
+        const url = el.dataset.refreshUrl;
+        if (!url) return;
+        fetch(url, { credentials: 'same-origin' })
+            .then((response) => {
+                if (!response.ok) throw new Error('refresh failed');
+                return response.text();
+            })
+            .then((html) => {
+                el.innerHTML = html;
+            })
+            .catch(() => {});
+    }
+
+    function startPolling() {
+        document.querySelectorAll('[data-refresh-url]').forEach((el) => {
+            const intervalMs = parseInt(el.dataset.refreshInterval || '5000', 10);
+            refreshSection(el);
+            if (intervalMs > 0) {
+                setInterval(() => refreshSection(el), intervalMs);
+            }
+        });
+    }
+
+    function openModal(url) {
+        fetch(url, { credentials: 'same-origin' })
+            .then((response) => response.text())
+            .then((html) => {
+                document.getElementById('modal-content').innerHTML = html;
+                document.getElementById('modal').classList.remove('hidden');
+            });
+    }
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-modal-url]');
+        if (trigger) {
+            event.preventDefault();
+            openModal(trigger.getAttribute('href') || trigger.dataset.modalUrl);
+        }
+        if (event.target.closest('[data-close-modal]')) {
+            document.getElementById('modal').classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', startPolling);
+    </script>
+</body>
+</html>

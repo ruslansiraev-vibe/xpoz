@@ -1,0 +1,16 @@
+{% if runs %}
+<div class="run-list">
+    {% for run in runs %}
+    <a class="run-item" href="/runs?run_id={{ run.id }}">
+        <div class="run-item-top">
+            <strong>#{{ run.id }} · {{ run.job_type }}</strong>
+            <span class="status-pill status-{{ run.status }}">{{ run.status }}</span>
+        </div>
+        <div class="muted">started: {{ run.started_at or "pending" }}</div>
+        <div class="muted">by: {{ run.triggered_by or "unknown" }}</div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="muted">Запусков пока нет.</p>
+{% endif %}

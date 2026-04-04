@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-grid">
+    <div class="column column-wide">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="eyebrow">Runs</div>
+                    <h2>Управление запусками</h2>
+                </div>
+                {% if active_batch_exists %}
+                <span class="status-pill status-running">Есть активный batch</span>
+                {% endif %}
+            </div>
+
+            <div class="cards two">
+                <form method="post" action="/runs/start/batch" enctype="multipart/form-data" class="card stack-form">
+                    <h3>Batch run</h3>
+                    <label>
+                        <span>Accounts CSV</span>
+                        <input type="file" name="accounts_file" accept=".csv,text/csv">
+                    </label>
+                    <p class="muted">Можно загрузить новый CSV прямо здесь. Если файл не выбран, будет использован текущий путь из конфигурации, если он существует.</p>
+                    <label>
+                        <span>Preset</span>
+                        <select name="preset">
+                            <option value="csv-all" selected>csv-all</option>
+                            <option value="email-qualified">email-qualified</option>
+                        </select>
+                    </label>
+                    <div class="grid-2">
+                        <label>
+                            <span>Limit</span>
+                            <input type="number" name="limit" value="500" min="1" max="10000">
+                        </label>
+                        <label>
+                            <span>Workers</span>
+                            <input type="number" name="workers" value="20" min="1" max="50">
+                        </label>
+                    </div>
+                    <label>
+                        <span>Optional filter</span>
+                        <input type="text" name="filter" placeholder="country=USA">
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" name="reanalyze">
+                        <span>Reanalyze уже обработанные аккаунты</span>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" name="retry_errors">
+                        <span>Retry только quota/timeout ошибки</span>
+                    </label>
+                    <button type="submit">Запустить batch</button>
+                </form>
+
+                <div class="stack">
+                    <form method="post" action="/runs/start/single" class="card stack-form">
+                        <h3>Single account run</h3>
+                        <label>
+                            <span>Instagram username</span>
+                            <input type="text" name="username" placeholder="whop" required>
+                        </label>
+                        <p class="muted">Один аккаунт: тот же анализ, результат в `analysis_results`.</p>
+                        <button type="submit">Запустить single анализ</button>
+                    </form>
+
+                    <form method="post" action="/runs/start/txt-list" enctype="multipart/form-data" class="card stack-form">
+                        <h3>Список из TXT</h3>
+                        <label>
+                            <span>Файл .txt</span>
+                            <input type="file" name="usernames_file" accept=".txt,text/plain" required>
+                        </label>
+                        <p class="muted">По одному username на строку (можно с @). Пустые строки и комментарии с # в начале пропускаются. Дубликаты убираются. Уже проанализированные пропускаются, если не отмечено Reanalyze.</p>
+                        <div class="grid-2">
+                            <label>
+                                <span>Limit</span>
+                                <input type="number" name="limit" value="500" min="1" max="10000">
+                            </label>
+                            <label>
+                                <span>Workers</span>
+                                <input type="number" name="workers" value="20" min="1" max="50">
+                            </label>
+                        </div>
+                        <label class="check">
+                            <input type="checkbox" name="reanalyze">
+                            <span>Reanalyze уже обработанные аккаунты</span>
+                        </label>
+                        <button type="submit">Запустить анализ списка</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="eyebrow">History</div>
+                    <h2>История запусков</h2>
+                </div>
+            </div>
+            <div id="run-list-panel" data-refresh-url="/partials/run-list" data-refresh-interval="5000">
+                {% include "partials/run_list.html" %}
+            </div>
+        </div>
+    </div>
+
+    <div class="column">
+        <div class="panel sticky">
+            <div class="panel-header">
+                <div>
+                    <div class="eyebrow">Selected Run</div>
+                    <h2>Детали запуска</h2>
+                </div>
+            </div>
+            {% if selected_run %}
+            <div id="run-detail-panel" data-refresh-url="/partials/run-detail/{{ selected_run.id }}" data-refresh-interval="4000">
+                {% include "partials/run_detail.html" %}
+            </div>
+            {% else %}
+            <p class="muted">Пока нет запусков. Создай batch или single run слева.</p>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="eyebrow">Diagnostics</div>
+                    <h2>Системные проверки</h2>
+                </div>
+            </div>
+            <div class="diagnostics-list">
+                {% for item in diagnostics %}
+                <div class="diagnostic-row">
+                    <span class="status-pill status-{{ item.status }}">{{ item.label }}</span>
+                    <span class="muted">{{ item.detail }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

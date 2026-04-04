@@ -1,0 +1,58 @@
+<div class="detail-stack">
+    <div>
+        <div class="eyebrow">Record</div>
+        <h3>@{{ row.username }}</h3>
+    </div>
+    <div class="cards two compact">
+        <div class="metric-card">
+            <div class="muted">Criteria</div>
+            <div>C1 reels_performance: <strong>{{ row.reels_performance }}</strong></div>
+            <div>C2 low_performing_reels: <strong>{{ row.low_performing_reels }}</strong></div>
+            <div>C3 post_engagement: <strong>{{ row.post_engagement }}</strong></div>
+            <div>C4 monetization: <strong>{{ row.monetization }}</strong></div>
+        </div>
+        <div class="metric-card">
+            <div class="muted">Metrics</div>
+            <div>followers: <strong>{{ row.follower_count or "-" }}</strong></div>
+            <div>posts analyzed: <strong>{{ row.posts_analyzed or "-" }}</strong></div>
+            <div>engagement rate: <strong>{{ row.engagement_rate_pct or "-" }}</strong></div>
+            <div>xpoz results used: <strong>{{ row.xpoz_results_used or "-" }}</strong></div>
+        </div>
+    </div>
+    <div class="card">
+        <h4>Signals and notes</h4>
+        <div class="muted">Monetization signals</div>
+        <pre class="json-box">{{ row.monetization_signals | tojson(indent=2) }}</pre>
+        <div class="muted">Monetization reason</div>
+        <pre class="json-box">{{ row.monetization_reason or "-" }}</pre>
+        <div class="muted">Other socials</div>
+        <pre class="json-box">{{ row.other_socials | tojson(indent=2) }}</pre>
+    </div>
+    <div class="card">
+        <h4>Links and status</h4>
+        <div>YouTube: {{ row.youtube_url or "-" }}</div>
+        <div>Twitter: {{ row.twitter_url or "-" }}</div>
+        <div>Twitter followers: {{ row.twitter_followers or "-" }}</div>
+        <div>Analyzed at: {{ row.analyzed_at or "-" }}</div>
+        <div>Error: {{ row.error or "-" }}</div>
+        <div>LLM cost: {{ row.llm_cost_usd or 0 }}</div>
+    </div>
+    <div class="card">
+        <h4>Taxonomy</h4>
+        <div>offer_type: <strong>{{ row.offer_type or "-" }}</strong></div>
+        <div>offer_type_confidence: <strong>{{ row.offer_type_confidence or "-" }}</strong></div>
+        <div>funnel_type: <strong>{{ row.funnel_type or "-" }}</strong></div>
+        <div>business_model: <strong>{{ row.business_model or "-" }}</strong></div>
+        <div>audience_type: <strong>{{ row.audience_type or "-" }}</strong></div>
+        <div>monetization_strength: <strong>{{ row.monetization_strength or "-" }}</strong></div>
+        <div>platform_mix: <strong>{{ row.platform_mix or "-" }}</strong></div>
+        <div>primary_domain: <strong>{{ row.primary_domain or "-" }}</strong></div>
+        <div>language: <strong>{{ row.language or "-" }}</strong></div>
+        <div>geo_hint: <strong>{{ row.geo_hint or "-" }}</strong></div>
+        <div>ICP: <strong>{{ row.icp or "-" }}</strong></div>
+        <div class="muted">CTA keywords</div>
+        <pre class="json-box">{{ row.cta_keywords | tojson(indent=2) }}</pre>
+        <div class="muted">Bio keywords</div>
+        <pre class="json-box">{{ row.bio_keywords | tojson(indent=2) }}</pre>
+    </div>
+</div>

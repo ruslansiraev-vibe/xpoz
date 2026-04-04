@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <div class="eyebrow">Data</div>
+            <h2>analysis_results</h2>
+        </div>
+        <a
+            class="ghost-button"
+            href="/export/results?search={{ search | urlencode }}&quick_filter={{ quick_filter }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}"
+        >
+            Экспорт CSV
+        </a>
+    </div>
+
+    <form method="get" action="/results" class="toolbar">
+        <input type="text" name="search" placeholder="Поиск по username, reason, offer_type, icp, domain, youtube, twitter, error" value="{{ search }}">
+        <select name="quick_filter">
+            <option value="all" {% if quick_filter == "all" %}selected{% endif %}>All</option>
+            <option value="passed" {% if quick_filter == "passed" %}selected{% endif %}>Passed C1-C3</option>
+            <option value="monetization" {% if quick_filter == "monetization" %}selected{% endif %}>Monetization</option>
+            <option value="has_error" {% if quick_filter == "has_error" %}selected{% endif %}>Has error</option>
+            <option value="has_youtube" {% if quick_filter == "has_youtube" %}selected{% endif %}>Has youtube</option>
+            <option value="has_twitter" {% if quick_filter == "has_twitter" %}selected{% endif %}>Has twitter</option>
+            <option value="offer_course" {% if quick_filter == "offer_course" %}selected{% endif %}>Offer: course</option>
+            <option value="offer_coaching" {% if quick_filter == "offer_coaching" %}selected{% endif %}>Offer: coaching</option>
+            <option value="offer_consulting" {% if quick_filter == "offer_consulting" %}selected{% endif %}>Offer: consulting</option>
+            <option value="offer_agency_service" {% if quick_filter == "offer_agency_service" %}selected{% endif %}>Offer: agency_service</option>
+            <option value="offer_community_membership" {% if quick_filter == "offer_community_membership" %}selected{% endif %}>Offer: community_membership</option>
+            <option value="strength_strong" {% if quick_filter == "strength_strong" %}selected{% endif %}>Strength: strong</option>
+            <option value="strength_moderate" {% if quick_filter == "strength_moderate" %}selected{% endif %}>Strength: moderate</option>
+            <option value="platform_multi_channel" {% if quick_filter == "platform_multi_channel" %}selected{% endif %}>Platform: multi_channel</option>
+            <option value="platform_instagram_youtube" {% if quick_filter == "platform_instagram_youtube" %}selected{% endif %}>Platform: instagram_youtube</option>
+            <option value="icp_icp1" {% if quick_filter == "icp_icp1" %}selected{% endif %}>ICP1</option>
+            <option value="icp_icp2" {% if quick_filter == "icp_icp2" %}selected{% endif %}>ICP2</option>
+            <option value="icp_icp3" {% if quick_filter == "icp_icp3" %}selected{% endif %}>ICP3</option>
+            <option value="icp_icp4" {% if quick_filter == "icp_icp4" %}selected{% endif %}>ICP4</option>
+            <option value="icp_icp5" {% if quick_filter == "icp_icp5" %}selected{% endif %}>ICP5</option>
+        </select>
+        <select name="sort_by">
+            <option value="id" {% if sort_by == "id" %}selected{% endif %}>Sort: id</option>
+            <option value="analyzed_at" {% if sort_by == "analyzed_at" %}selected{% endif %}>Sort: analyzed_at</option>
+            <option value="username" {% if sort_by == "username" %}selected{% endif %}>Sort: username</option>
+            <option value="follower_count" {% if sort_by == "follower_count" %}selected{% endif %}>Sort: follower_count</option>
+            <option value="engagement_rate_pct" {% if sort_by == "engagement_rate_pct" %}selected{% endif %}>Sort: engagement_rate_pct</option>
+            <option value="offer_type" {% if sort_by == "offer_type" %}selected{% endif %}>Sort: offer_type</option>
+            <option value="monetization_strength" {% if sort_by == "monetization_strength" %}selected{% endif %}>Sort: monetization_strength</option>
+            <option value="icp" {% if sort_by == "icp" %}selected{% endif %}>Sort: icp</option>
+        </select>
+        <select name="sort_dir">
+            <option value="desc" {% if sort_dir == "desc" %}selected{% endif %}>DESC</option>
+            <option value="asc" {% if sort_dir == "asc" %}selected{% endif %}>ASC</option>
+        </select>
+        <button type="submit">Применить</button>
+    </form>
+
+    <div id="results-table-panel">
+        {% include "partials/results_table.html" %}
+    </div>
+</section>
+{% endblock %}

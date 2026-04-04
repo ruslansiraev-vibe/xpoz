@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="login-wrap">
+    <div class="login-card">
+        <div class="eyebrow">Xpoz</div>
+        <h2>Вход в Ops Console</h2>
+        <p class="muted">Внутренний интерфейс для запусков, логов и результатов анализа.</p>
+        <p class="muted">
+            Публичное описание enrichment:
+            <a href="/index.html">/index.html</a>
+        </p>
+        <form method="post" action="/login" class="stack-form">
+            <label>
+                <span>Логин</span>
+                <input type="text" name="username" autocomplete="username" required>
+            </label>
+            <label>
+                <span>Пароль</span>
+                <input type="password" name="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

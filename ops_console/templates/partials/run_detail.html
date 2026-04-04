@@ -1,0 +1,61 @@
+<div class="stack">
+    <div class="cards two compact">
+        <div class="metric-card">
+            <div class="muted">Статус</div>
+            <div class="metric-row">
+                <strong>#{{ selected_run.id }}</strong>
+                <span class="status-pill status-{{ selected_run.status }}">{{ selected_run.status }}</span>
+            </div>
+            <div class="muted">PID: {{ selected_run.pid or "n/a" }}</div>
+            <div class="muted">Started: {{ selected_run.started_at or "pending" }}</div>
+            <div class="muted">Finished: {{ selected_run.finished_at or "not finished" }}</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="muted">Summary</div>
+            {% set summary = selected_run.result_summary %}
+            <div class="muted">Processed: {{ summary.done or 0 }} / {{ summary.total or 0 }}</div>
+            <div class="muted">Success: {{ summary.success or 0 }}</div>
+            <div class="muted">Errors: {{ summary.errors or 0 }}</div>
+            <div class="muted">ETA: {{ summary.eta or "n/a" }}</div>
+            <div class="muted">Cost: ${{ summary.llm_cost_usd or 0 }}</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="panel-header small">
+            <h3>Параметры</h3>
+            {% if selected_run.status in ["queued", "starting", "running"] %}
+            <form method="post" action="/runs/{{ selected_run.id }}/stop">
+                <button type="submit" class="danger-button">Остановить</button>
+            </form>
+            {% endif %}
+        </div>
+        <pre class="json-box">{{ selected_run.params | tojson(indent=2) }}</pre>
+        {% if selected_run.error_summary %}
+        <div class="error-box">{{ selected_run.error_summary }}</div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h3>События</h3>
+        {% if selected_run.events %}
+        <div class="event-list">
+            {% for event in selected_run.events %}
+            <div class="event-row">
+                <strong>{{ event.level }}</strong>
+                <span>{{ event.message }}</span>
+                <span class="muted">{{ event.at }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">Событий пока нет.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h3>Логи</h3>
+        <pre class="log-box">{{ selected_run.log_tail }}</pre>
+    </div>
+</div>

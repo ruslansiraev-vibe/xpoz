@@ -1,0 +1,21 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.py[cod]
+.deps/
+.venv/
+venv/
+
+# Secrets
+ops_console.local.env
+systemd/xpoz-ops-console.env
+
+# Runtime data
+ops_console/data/
+ops_console/.pytest_cache/
+data.db
+data.db-wal
+data.db-shm
+deploy/accounts.csv
+deploy/icp_emails/
+deploy/*.log

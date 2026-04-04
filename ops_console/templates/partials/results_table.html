@@ -1,0 +1,60 @@
+{% set total_pages = ((total - 1) // page_size) + 1 if total else 1 %}
+{% set ncol = results_table_columns|length %}
+{% if error_message %}
+<div class="error-box">{{ error_message }}</div>
+{% endif %}
+<div class="table-meta">
+    <span>{{ total }} records</span>
+    <span>page {{ page }} / {{ total_pages }}</span>
+    <span class="muted">все поля analysis_results — прокрутка по горизонтали</span>
+</div>
+
+<div class="table-wrap result-full-table">
+    <table>
+        <thead>
+            <tr>
+                {% for col in results_table_columns %}
+                <th title="{{ col }}">{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if not rows %}
+            <tr>
+                <td colspan="{{ ncol }}" class="muted">Нет данных для текущего фильтра.</td>
+            </tr>
+            {% endif %}
+            {% for row in rows %}
+            <tr>
+                {% for col in results_table_columns %}
+                <td class="result-cell" data-col="{{ col }}">
+                    {% if col == "username" %}
+                    <a href="/results/{{ row.id }}" data-modal-url="/results/{{ row.id }}">{{ row.username or "—" }}</a>
+                    {% elif col in results_bool_columns %}
+                    {{ "yes" if row[col] else "no" }}
+                    {% elif row[col] is none %}
+                    —
+                    {% elif row[col] is mapping or (row[col] is sequence and row[col] is not string) %}
+                    <pre class="compact-json">{{ row[col]|as_json }}</pre>
+                    {% else %}
+                    {{ row[col] }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="pager">
+    {% if page > 1 %}
+    <a class="ghost-button" href="/results?page={{ page - 1 }}&search={{ search }}&quick_filter={{ quick_filter }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}">Назад</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+
+    {% if page < total_pages %}
+    <a class="ghost-button" href="/results?page={{ page + 1 }}&search={{ search }}&quick_filter={{ quick_filter }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}">Дальше</a>
+    {% endif %}
+</div>

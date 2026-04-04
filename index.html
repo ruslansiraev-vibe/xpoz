@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xpoz Enrichment Overview</title>
+    <style>
+        :root {
+            --bg: #0d1016;
+            --panel: #171d28;
+            --panel-2: #1d2431;
+            --text: #eef2f9;
+            --muted: #a9b3c5;
+            --accent: #82a0ff;
+            --accent-2: #70d6ff;
+            --border: #2b3444;
+            --ok: #6dd4a3;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #0b0e14 0%, #101722 100%);
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 20px 80px;
+        }
+
+        .hero,
+        .panel {
+            background: rgba(23, 29, 40, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+        }
+
+        .hero {
+            padding: 28px;
+            margin-bottom: 22px;
+        }
+
+        .eyebrow {
+            color: var(--accent-2);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 38px;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 14px;
+        }
+
+        p, li {
+            color: var(--text);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 8px 12px;
+            color: var(--accent-2);
+            background: rgba(112, 214, 255, 0.08);
+            font-size: 14px;
+        }
+
+        .flow {
+            display: grid;
+            gap: 14px;
+        }
+
+        .flow-step {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            background: var(--panel-2);
+        }
+
+        .code,
+        pre {
+            background: #0b0f15;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            overflow: auto;
+            color: #dfe7f5;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th, td {
+            text-align: left;
+            vertical-align: top;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--accent-2);
+        }
+
+        .ok {
+            color: var(--ok);
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="hero">
+            <div class="eyebrow">Xpoz Enrichment</div>
+            <h1>Как работает enrichment в Xpoz и какие данные можно собирать</h1>
+            <p class="muted">
+                Эта страница описывает текущий пайплайн в <code>xpoz/deploy</code>:
+                от входного списка аккаунтов до анализа, enrichment и сохранения результата в <code>analysis_results</code>.
+            </p>
+            <div class="pill-row">
+                <span class="pill">Источник: <code>accounts</code></span>
+                <span class="pill">Результат: <code>analysis_results</code></span>
+                <span class="pill">CLI: <code>batch_analyze.py</code></span>
+                <span class="pill">One-off: <code>analyze_account.py</code></span>
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>1. Общая схема работы</h2>
+                <div class="flow">
+                    <div class="flow-step">
+                        <h3>Шаг 1. Берём входные аккаунты</h3>
+                        <p>
+                            Скрипт читает usernames из таблицы <code>accounts</code>. Для batch-режима
+                            можно использовать уже готовые выборки, например <code>email-qualified</code>:
+                            аккаунты с email и достаточным числом подписчиков.
+                        </p>
+                    </div>
+                    <div class="flow-step">
+                        <h3>Шаг 2. Обогащаем профиль через Xpoz</h3>
+                        <p>
+                            Для каждого username вызывается enrichment:
+                            профиль Instagram, посты, внешние ссылки и, при необходимости, best-effort данные по Twitter/X.
+                        </p>
+                    </div>
+                    <div class="flow-step">
+                        <h3>Шаг 3. Считаем критерии</h3>
+                        <p>
+                            Python считает performance и engagement-метрики, а Claude Haiku определяет сигналы монетизации
+                            по bio и captions.
+                        </p>
+                    </div>
+                    <div class="flow-step">
+                        <h3>Шаг 4. Сохраняем результат</h3>
+                        <p>
+                            Обогащённые данные и итоговые флаги записываются в <code>analysis_results</code>,
+                            после чего их можно фильтровать, экспортировать и использовать для поиска следующих кандидатов.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>2. Что именно собирается из Xpoz</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Блок</th>
+                            <th>Какие данные</th>
+                            <th>Зачем</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Instagram profile</td>
+                            <td>
+                                <code>id</code>, <code>username</code>, <code>fullName</code>, <code>biography</code>,
+                                <code>followerCount</code>, <code>followingCount</code>, <code>mediaCount</code>,
+                                <code>isVerified</code>, <code>isPrivate</code>, <code>externalUrl</code>
+                            </td>
+                            <td>Понимание размера аккаунта, bio, статуса и внешней ссылки.</td>
+                        </tr>
+                        <tr>
+                            <td>Instagram posts</td>
+                            <td>
+                                <code>postType</code>, <code>mediaType</code>, <code>caption</code>,
+                                <code>createdAtDate</code>, <code>likeCount</code>, <code>commentCount</code>,
+                                <code>reshareCount</code>, <code>videoPlayCount</code>
+                            </td>
+                            <td>Расчёт performance, low-performer stability и engagement rate.</td>
+                        </tr>
+                        <tr>
+                            <td>Other socials</td>
+                            <td>Bio links, YouTube, Twitter/X и другие внешние соцсети, найденные в bio.</td>
+                            <td>Понимание мультиканальности и возможности дальнейшего enrichment.</td>
+                        </tr>
+                        <tr>
+                            <td>Twitter/X best-effort</td>
+                            <td>
+                                <code>username</code>, <code>name</code>, <code>description</code>,
+                                <code>followersCount</code>, <code>tweetCount</code>, <code>isVerified</code>
+                            </td>
+                            <td>Дополнительный сигнал масштаба и внешней аудитории.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="panel">
+                <h2>3. Какие критерии считаются сейчас</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Критерий</th>
+                            <th>Что проверяется</th>
+                            <th>Где считается</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>C1</strong> Reels performance</td>
+                            <td>Не менее 5 reels с views ≥ 150% от подписчиков.</td>
+                            <td>Python</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C2</strong> Low-performing reels</td>
+                            <td>Среднее нижних 10 reels из последних 15 > 15% от подписчиков.</td>
+                            <td>Python</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C3</strong> Post engagement</td>
+                            <td>Средний engagement по последним постам ≥ 1.5%.</td>
+                            <td>Python</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C4</strong> Monetization</td>
+                            <td>Есть ли сигналы монетизации: курсы, лид-магниты, комьюнити, вебинары, консультации.</td>
+                            <td>Claude Haiku</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C5</strong> Other socials</td>
+                            <td>Какие ещё соцсети и внешние ссылки есть в профиле.</td>
+                            <td>Xpoz + bio parsing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="panel">
+                <h2>4. Что попадает в <code>analysis_results</code></h2>
+                <p>Ниже ключевые поля, которые уже сохраняются и пригодны для фильтрации.</p>
+                <div class="code"><code>
+username, analyzed_at, follower_count, posts_analyzed,
+reels_performance, reels_90d_count, reels_above_150pct,
+low_performing_reels, bottom10_avg_views,
+post_engagement, engagement_rate_pct, total_interactions,
+monetization, monetization_signals, monetization_reason,
+youtube_url, twitter_url, twitter_followers, other_socials,
+error, llm_cost_usd, xpoz_results_used
+                </code></div>
+                <p class="muted">
+                    Это уже достаточно, чтобы строить shortlist качественных аккаунтов,
+                    сегментировать базу и запускать дополнительный enrichment только по перспективным профилям.
+                </p>
+            </section>
+
+            <section class="panel">
+                <h2>5. Какие данные можно собирать для поиска новых аккаунтов</h2>
+                <p>
+                    Enrichment Xpoz полезен не только для оценки уже известных аккаунтов, но и для расширения базы.
+                    На практике можно собирать следующие типы данных:
+                </p>
+                <ul>
+                    <li><strong>Базовые profile attributes:</strong> размер аккаунта, verified/private status, media count, bio, external URL.</li>
+                    <li><strong>Контентные сигналы:</strong> caption-темы, тип контента, частота reels, средняя вовлечённость, стабильность просмотров.</li>
+                    <li><strong>Монетизация:</strong> наличие продуктов, курсов, консультаций, бесплатных воронок, communities, webinar CTA.</li>
+                    <li><strong>Cross-platform links:</strong> YouTube, Twitter/X, TikTok, Telegram, личные сайты, формы, landing pages.</li>
+                    <li><strong>Поисковые seed-поля:</strong> username, full name, biography keywords, niche words, external domain, схожие CTA.</li>
+                    <li><strong>Ретрай и enrichment quality:</strong> ошибки, quota-failures, пустые follower counts, real-time fallback results.</li>
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h2>6. Как использовать enrichment для сбора новых аккаунтов</h2>
+                <div class="flow">
+                    <div class="flow-step">
+                        <h3>Подход A. Расширение от уже найденных аккаунтов</h3>
+                        <p>
+                            Берём уже хорошие аккаунты из <code>analysis_results</code>, смотрим bio, external domains,
+                            YouTube/Twitter links и повторяющиеся монетизационные паттерны. Это даёт новые поисковые seed'ы
+                            для ручного или автоматического поиска похожих аккаунтов.
+                        </p>
+                    </div>
+                    <div class="flow-step">
+                        <h3>Подход B. Поиск по username / niche words</h3>
+                        <p>
+                            Можно использовать username, full name и biography keywords как основу для поиска похожих профилей:
+                            creator, coach, agency, consultant, course, community, webinar, newsletter и так далее.
+                        </p>
+                    </div>
+                    <div class="flow-step">
+                        <h3>Подход C. Фильтрация по quality thresholds</h3>
+                        <p>
+                            Новый аккаунт имеет смысл добавлять в pipeline, если enrichment показывает
+                            достаточный follower count, не private-профиль, признаки reels-активности и хотя бы базовый monetization fit.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>7. Практические примеры фильтров для новых кандидатов</h2>
+                <ul>
+                    <li><span class="ok">High-fit creators:</span> <code>reels_performance = true</code>, <code>low_performing_reels = true</code>, <code>post_engagement = true</code></li>
+                    <li><span class="ok">Monetized accounts:</span> <code>monetization = true</code></li>
+                    <li><span class="ok">Multi-channel creators:</span> есть <code>youtube_url</code> или <code>twitter_url</code></li>
+                    <li><span class="ok">Retry candidates:</span> <code>error is not null</code>, но профиль перспективный по остальным полям</li>
+                    <li><span class="ok">Expansion seeds:</span> одинаковые домены, CTA, bio keywords и type-of-offer у уже успешных аккаунтов</li>
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h2>8. Текущие ограничения</h2>
+                <ul>
+                    <li>Некоторые поля могут приходить неполными, поэтому в коде уже есть real-time fallback по Instagram ID.</li>
+                    <li>Twitter/X enrichment best-effort и не должен считаться обязательным.</li>
+                    <li>Монетизация зависит от наличия <code>ANTHROPIC_API_KEY</code>; без него критерий C4 будет пропущен.</li>
+                    <li>Текущий pipeline в основном анализирует уже известные usernames из <code>accounts</code>; для полноценного discovery новых аккаунтов нужен отдельный ingestion/search слой.</li>
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h2>9. Что можно добавить следующим шагом</h2>
+                <ul>
+                    <li>Отдельную таблицу discovery-кандидатов до попадания в <code>accounts</code>.</li>
+                    <li>Сохранение seed-атрибутов: niche, bio keywords, domain, source search term, source account.</li>
+                    <li>Автоматические enrichment-правила: если найден YouTube/Twitter/domain, запускать дополнительный lookup.</li>
+                    <li>Сегментацию новых аккаунтов по offer type, audience size, language, geography и social mix.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

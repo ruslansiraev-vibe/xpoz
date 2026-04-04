@@ -1,0 +1,5 @@
+# По одному Instagram username на строку (можно с @)
+# Строки с # в начале — комментарии
+creator_one
+@another_creator
+third_account
