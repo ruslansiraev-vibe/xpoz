@@ -412,7 +412,9 @@ select {
 
 .column-filter-row {
     display: flex;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 10px;
     padding: 8px 4px;
     cursor: pointer;
@@ -421,16 +423,18 @@ select {
 }
 
 .column-filter-row input {
-    margin-top: 2px;
     flex-shrink: 0;
 }
 
 .column-filter-name {
-    word-break: break-word;
-    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 12px;
     color: var(--muted);
+    white-space: nowrap;
+    overflow-x: auto;
 }
 
 .result-full-table .compact-json {
