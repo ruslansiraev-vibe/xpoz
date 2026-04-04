@@ -35,6 +35,7 @@ fi
 
 XP="$TARGET"
 cd "$XP"
+git config --global --add safe.directory "$XP" 2>/dev/null || true
 
 python3 -m venv .venv
 # shellcheck disable=SC1091
