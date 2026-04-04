@@ -36,6 +36,24 @@ python3 -m pip install -r ops_console/requirements.txt
 
 ## Run
 
+Локально (с venv в `xpoz/.venv`) — остановка процесса на порту и перезапуск одной командой:
+
+```bash
+cd /path/to/xpoz
+./scripts/run_ops_console.sh
+```
+
+Порт по умолчанию `9004`; переопределение: `APP_PORT=9005 ./scripts/run_ops_console.sh`. Хост: `HOST=0.0.0.0 ./scripts/run_ops_console.sh`.
+
+Без скрипта:
+
+```bash
+cd /path/to/xpoz
+.venv/bin/python -m uvicorn ops_console.app:app --host 127.0.0.1 --port 9004
+```
+
+На сервере (пример):
+
 ```bash
 cd /root/projects/xpoz
 uvicorn ops_console.app:app --host 0.0.0.0 --port 9004
@@ -43,7 +61,7 @@ uvicorn ops_console.app:app --host 0.0.0.0 --port 9004
 
 By default the UI reads results from local SQLite `data.db`.
 
-Then open `http://127.0.0.1:9004`.
+Then open `http://127.0.0.1:9004` (или ваш `APP_PORT`).
 
 ## Systemd
 
