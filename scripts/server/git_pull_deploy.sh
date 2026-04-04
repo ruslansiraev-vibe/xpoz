@@ -8,6 +8,9 @@
 # Переменные:
 #   TARGET  — корень клона git (где лежит .git и ops_console/)
 #   GIT_REF — main
+#   GIT_PULL_DEPLOY_RESET=1 — после fetch: reset --hard к origin и git clean -fd (убирает
+#     локальные правки в отслеживаемых файлах и неотслеживаемые дубликаты). Игнорируемые
+#     git файлы (.env, data.db, ops_console/data/) не удаляются.
 #
 set -euo pipefail
 
@@ -30,10 +33,18 @@ _ensure_git_safe_directory() {
 }
 _ensure_git_safe_directory "$TARGET"
 
-echo "==> git fetch / checkout $GIT_REF / pull"
+echo "==> git fetch"
 git -C "$TARGET" fetch origin
-git -C "$TARGET" checkout "$GIT_REF"
-git -C "$TARGET" pull origin "$GIT_REF"
+
+if [[ "${GIT_PULL_DEPLOY_RESET:-0}" == "1" ]]; then
+  echo "==> GIT_PULL_DEPLOY_RESET=1: reset --hard origin/$GIT_REF && git clean -fd"
+  git -C "$TARGET" reset --hard "origin/$GIT_REF"
+  git -C "$TARGET" clean -fd
+else
+  echo "==> checkout $GIT_REF && pull"
+  git -C "$TARGET" checkout "$GIT_REF"
+  git -C "$TARGET" pull origin "$GIT_REF"
+fi
 
 if [[ ! -x "$TARGET/.venv/bin/pip" ]]; then
   echo "==> Создание venv"
