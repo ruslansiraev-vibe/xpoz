@@ -56,23 +56,25 @@
         <button type="submit">Применить</button>
     </form>
 
-    <details class="column-picker">
-        <summary>Видимые колонки <span class="muted">(сохраняется в браузере)</span></summary>
-        <div class="column-picker-inner">
-            <div class="column-picker-actions">
-                <button type="button" class="ghost-button tiny-btn" id="cols-show-all">Все</button>
-                <button type="button" class="ghost-button tiny-btn" id="cols-hide-all">Скрыть все</button>
+    <div class="column-filter-panel">
+        <div class="column-filter-toolbar">
+            <div>
+                <div class="column-filter-title">Доп. фильтр: колонки таблицы</div>
+                <div class="muted column-filter-hint">Галочка = показывать столбец. Сохраняется только в этом браузере.</div>
             </div>
-            <div class="column-picker-grid">
-                {% for col in results_table_columns %}
-                <label class="column-picker-item">
-                    <input type="checkbox" class="column-toggle" value="{{ col }}" checked>
-                    <span title="{{ col }}">{{ col }}</span>
-                </label>
-                {% endfor %}
-            </div>
+            <button type="button" class="ghost-button tiny-btn" id="cols-reset-default">По умолчанию (все)</button>
         </div>
-    </details>
+        <ul class="column-filter-list" aria-label="Видимость колонок">
+            {% for col in results_table_columns %}
+            <li>
+                <label class="column-filter-row">
+                    <input type="checkbox" class="column-toggle" data-column="{{ col }}" checked>
+                    <span class="column-filter-name">{{ col }}</span>
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 
     <div id="results-table-panel">
         {% include "partials/results_table.html" %}
@@ -80,73 +82,97 @@
 </section>
 <script>
 (function () {
-    var LS_KEY = 'xpoz_results_hidden_cols';
+    var LS_KEY = 'xpoz_results_column_visibility';
+    var LS_LEGACY_HIDDEN = 'xpoz_results_hidden_cols';
     var root = document.querySelector('.result-full-table');
-    if (!root) return;
+    var toggles = document.querySelectorAll('input.column-toggle');
+    if (!root || !toggles.length) return;
 
-    function loadHidden() {
+    function allColumns() {
+        return Array.prototype.map.call(toggles, function (input) {
+            return input.getAttribute('data-column') || '';
+        }).filter(Boolean);
+    }
+
+    /** @returns {Record<string, boolean>|null} */
+    function loadMap() {
+        try {
+            var legacy = localStorage.getItem(LS_LEGACY_HIDDEN);
+            if (legacy) {
+                var hiddenArr = JSON.parse(legacy);
+                var hidden = new Set(Array.isArray(hiddenArr) ? hiddenArr : []);
+                var m = {};
+                allColumns().forEach(function (col) {
+                    m[col] = !hidden.has(col);
+                });
+                localStorage.removeItem(LS_LEGACY_HIDDEN);
+                localStorage.setItem(LS_KEY, JSON.stringify(m));
+                return m;
+            }
+        } catch (e) { /* ignore */ }
+
         try {
             var raw = localStorage.getItem(LS_KEY);
-            if (!raw) return new Set();
-            var arr = JSON.parse(raw);
-            return new Set(Array.isArray(arr) ? arr : []);
+            if (!raw) return null;
+            var parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
         } catch (e) {
-            return new Set();
+            return null;
         }
     }
 
-    function saveHidden(hidden) {
-        localStorage.setItem(LS_KEY, JSON.stringify(Array.from(hidden)));
+    function isVisible(map, col) {
+        if (!map) return true;
+        if (!Object.prototype.hasOwnProperty.call(map, col)) return true;
+        return map[col] !== false;
     }
 
-    function applyVisibility(hidden) {
+    function persistFromUi() {
+        var m = {};
+        Array.prototype.forEach.call(toggles, function (input) {
+            var col = input.getAttribute('data-column');
+            if (col) m[col] = input.checked;
+        });
+        localStorage.setItem(LS_KEY, JSON.stringify(m));
+    }
+
+    function applyTableVisibility() {
+        var onByCol = {};
+        Array.prototype.forEach.call(toggles, function (input) {
+            var col = input.getAttribute('data-column');
+            if (col) onByCol[col] = input.checked;
+        });
         root.querySelectorAll('[data-col]').forEach(function (el) {
             var col = el.getAttribute('data-col');
             if (!col) return;
-            el.classList.toggle('col-hidden', hidden.has(col));
+            var on = onByCol[col] !== false;
+            el.classList.toggle('col-hidden', !on);
         });
     }
 
-    function syncCheckboxes(hidden) {
-        document.querySelectorAll('input.column-toggle').forEach(function (input) {
-            input.checked = !hidden.has(input.value);
-        });
-    }
+    var map = loadMap();
+    Array.prototype.forEach.call(toggles, function (input) {
+        var col = input.getAttribute('data-column');
+        if (!col) return;
+        input.checked = isVisible(map, col);
+    });
+    applyTableVisibility();
 
-    var hidden = loadHidden();
-    applyVisibility(hidden);
-    syncCheckboxes(hidden);
-
-    document.querySelectorAll('input.column-toggle').forEach(function (input) {
+    Array.prototype.forEach.call(toggles, function (input) {
         input.addEventListener('change', function () {
-            if (input.checked) {
-                hidden.delete(input.value);
-            } else {
-                hidden.add(input.value);
-            }
-            saveHidden(hidden);
-            applyVisibility(hidden);
+            persistFromUi();
+            applyTableVisibility();
         });
     });
 
-    var btnAll = document.getElementById('cols-show-all');
-    var btnNone = document.getElementById('cols-hide-all');
-    if (btnAll) {
-        btnAll.addEventListener('click', function () {
-            hidden.clear();
-            saveHidden(hidden);
-            syncCheckboxes(hidden);
-            applyVisibility(hidden);
-        });
-    }
-    if (btnNone) {
-        btnNone.addEventListener('click', function () {
-            document.querySelectorAll('input.column-toggle').forEach(function (input) {
-                hidden.add(input.value);
+    var btnReset = document.getElementById('cols-reset-default');
+    if (btnReset) {
+        btnReset.addEventListener('click', function () {
+            localStorage.removeItem(LS_KEY);
+            Array.prototype.forEach.call(toggles, function (input) {
+                input.checked = true;
             });
-            saveHidden(hidden);
-            syncCheckboxes(hidden);
-            applyVisibility(hidden);
+            applyTableVisibility();
         });
     }
 })();
