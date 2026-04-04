@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Stre
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import Response
 
 from sqlite_store import ANALYSIS_BOOL_COLUMNS, RESULT_COLUMNS
 
@@ -30,8 +31,10 @@ registry = RunRegistry(DATA_DIR / "ops_console.db")
 sqlite_client = SQLiteClient(settings.db_path)
 
 app = FastAPI(title=settings.app_title)
-app.add_middleware(SessionMiddleware, secret_key=settings.app_secret, same_site="lax")
+# Статика до SessionMiddleware — сессия не нужна для /static/*.
+# За reverse proxy: запускайте uvicorn с --proxy-headers (или новее Starlette с ProxyHeadersMiddleware).
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.add_middleware(SessionMiddleware, secret_key=settings.app_secret, same_site="lax")
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
@@ -44,6 +47,10 @@ def _as_json_filter(value: Any) -> str:
 
 
 templates.env.filters["as_json"] = _as_json_filter
+
+
+def _head_html() -> HTMLResponse:
+    return HTMLResponse(content="", status_code=200, media_type="text/html; charset=utf-8")
 
 
 @app.exception_handler(HTTPException)
@@ -393,6 +400,7 @@ def parse_int(value: str, default: int) -> int:
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", response_class=HTMLResponse)
 def root(request: Request):
     if not is_authenticated(request):
         return RedirectResponse("/login", status_code=303)
@@ -400,15 +408,29 @@ def root(request: Request):
 
 
 @app.get("/index.html")
+@app.head("/index.html")
 @app.get("/overview")
-def public_overview():
-    return FileResponse(PROJECT_DIR / "index.html")
+@app.head("/overview")
+def public_overview(request: Request):
+    path = PROJECT_DIR / "index.html"
+    if request.method == "HEAD":
+        if not path.is_file():
+            return Response(status_code=404)
+        length = path.stat().st_size
+        return Response(
+            status_code=200,
+            media_type="text/html; charset=utf-8",
+            headers={"Content-Length": str(length)},
+        )
+    return FileResponse(path)
 
 
-@app.get("/login", response_class=HTMLResponse)
+@app.api_route("/login", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def login_page(request: Request):
     if is_authenticated(request):
         return RedirectResponse("/runs", status_code=303)
+    if request.method == "HEAD":
+        return _head_html()
     return render(request, "login.html", {})
 
 
@@ -431,9 +453,11 @@ def logout(request: Request):
     return RedirectResponse("/login", status_code=303)
 
 
-@app.get("/runs", response_class=HTMLResponse)
+@app.api_route("/runs", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def runs_page(request: Request, run_id: int | None = None):
     user = require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     sync_runs()
     runs = registry.list_runs()
     selected_run = registry.get_run(run_id) if run_id else (runs[0] if runs else None)
@@ -559,16 +583,20 @@ def stop_run(request: Request, run_id: int):
     return RedirectResponse(f"/runs?run_id={run_id}", status_code=303)
 
 
-@app.get("/partials/run-list", response_class=HTMLResponse)
+@app.api_route("/partials/run-list", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def partial_run_list(request: Request):
     require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     sync_runs()
     return render(request, "partials/run_list.html", {"runs": registry.list_runs()})
 
 
-@app.get("/partials/run-detail/{run_id}", response_class=HTMLResponse)
+@app.api_route("/partials/run-detail/{run_id}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def partial_run_detail(request: Request, run_id: int):
     require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     sync_runs()
     run = registry.get_run(run_id)
     if not run:
@@ -578,7 +606,7 @@ def partial_run_detail(request: Request, run_id: int):
     return render(request, "partials/run_detail.html", {"selected_run": run})
 
 
-@app.get("/results", response_class=HTMLResponse)
+@app.api_route("/results", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def results_page(
     request: Request,
     page: int = 1,
@@ -588,6 +616,8 @@ def results_page(
     sort_dir: str = "desc",
 ):
     require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     rows: list[dict[str, Any]] = []
     total = 0
     error_message = None
@@ -621,7 +651,7 @@ def results_page(
     )
 
 
-@app.get("/partials/results-table", response_class=HTMLResponse)
+@app.api_route("/partials/results-table", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def partial_results_table(
     request: Request,
     page: int = 1,
@@ -631,6 +661,8 @@ def partial_results_table(
     sort_dir: str = "desc",
 ):
     require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     rows: list[dict[str, Any]] = []
     total = 0
     error_message = None
@@ -664,9 +696,11 @@ def partial_results_table(
     )
 
 
-@app.get("/results/{record_id}", response_class=HTMLResponse)
+@app.api_route("/results/{record_id}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def result_detail(request: Request, record_id: int):
     require_user(request)
+    if request.method == "HEAD":
+        return _head_html()
     try:
         row = sqlite_client.fetch_result(record_id)
     except RuntimeError as exc:
@@ -703,7 +737,10 @@ def export_results(
 
 
 @app.get("/healthz")
-def healthz():
+@app.head("/healthz")
+def healthz(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
     sync_runs()
     sqlite_ok, detail = sqlite_client.healthcheck()
     return {
@@ -711,3 +748,9 @@ def healthz():
         "detail": detail,
         "active_runs": len(registry.list_active_runs()),
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+@app.head("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
