@@ -66,11 +66,15 @@
         </div>
         <ul class="column-filter-list" aria-label="Видимость колонок">
             {% for col in results_table_columns %}
-            <li>
-                <label class="column-filter-row">
-                    <input type="checkbox" class="column-toggle" data-column="{{ col }}" checked>
-                    <span class="column-filter-name">{{ col }}</span>
-                </label>
+            <li class="column-filter-row">
+                <input
+                    type="checkbox"
+                    class="column-toggle"
+                    id="result-col-{{ loop.index0 }}"
+                    data-column="{{ col }}"
+                    checked
+                >
+                <label class="column-filter-name" for="result-col-{{ loop.index0 }}">{{ col }}</label>
             </li>
             {% endfor %}
         </ul>
