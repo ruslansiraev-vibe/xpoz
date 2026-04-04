@@ -2,10 +2,11 @@
 # Обычное обновление: git pull + зависимости + перезапуск systemd.
 #
 # Запуск на VPS от root:
-#   bash /var/www/xpoz/scripts/server/git_pull_deploy.sh
+#   TARGET=/var/www/xpoz/xpoz bash scripts/server/git_pull_deploy.sh
+# (если репозиторий вложен в монорепо; иначе по умолчанию TARGET=/var/www/xpoz)
 #
 # Переменные:
-#   TARGET  — /var/www/xpoz
+#   TARGET  — корень клона git (где лежит .git и ops_console/)
 #   GIT_REF — main
 #
 set -euo pipefail
@@ -17,6 +18,17 @@ if [[ ! -d "$TARGET/.git" ]]; then
   echo "В $TARGET нет .git — сначала выполните scripts/server/setup_git_deploy.sh (или install_xpoz_var_www.sh)." >&2
   exit 1
 fi
+
+# После rsync владелец файлов может не совпадать с пользователем git → «dubious ownership».
+_ensure_git_safe_directory() {
+  local d="$1"
+  if git config --global --get-all safe.directory 2>/dev/null | grep -Fxq "$d"; then
+    return 0
+  fi
+  git config --global --add safe.directory "$d"
+  echo "==> git: safe.directory += $d"
+}
+_ensure_git_safe_directory "$TARGET"
 
 echo "==> git fetch / checkout $GIT_REF / pull"
 git -C "$TARGET" fetch origin
