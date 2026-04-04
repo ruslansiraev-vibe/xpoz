@@ -14,7 +14,7 @@
         <thead>
             <tr>
                 {% for col in results_table_columns %}
-                <th title="{{ col }}">{{ col }}</th>
+                <th title="{{ col }}" data-col="{{ col }}">{{ col }}</th>
                 {% endfor %}
             </tr>
         </thead>
