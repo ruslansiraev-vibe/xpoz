@@ -27,9 +27,26 @@
             {% for row in rows %}
             <tr>
                 {% for col in results_table_columns %}
-                <td class="result-cell" data-col="{{ col }}">
+                <td class="result-cell{% if col == 'c4_summary' %} c4-summary-cell{% endif %}" data-col="{{ col }}">
                     {% if col == "username" %}
                     <a href="/results/{{ row.id }}" data-modal-url="/results/{{ row.id }}">{{ row.username or "—" }}</a>
+                    {% elif col == "c4_summary" %}
+                    <div class="c4-summary">
+                        {% set strength = row.monetization_strength or "none" %}
+                        <span class="c4-badge c4-strength-{{ strength }}">{{ strength }}</span>
+                        {% if row.offer_type and row.offer_type != "unknown" %}
+                        <span class="c4-tag">{{ row.offer_type }}</span>
+                        {% endif %}
+                        {% if row.funnel_type and row.funnel_type != "unknown" %}
+                        <span class="c4-tag c4-tag-funnel">{{ row.funnel_type }}</span>
+                        {% endif %}
+                        {% if row.icp and row.icp != "unknown" %}
+                        <span class="c4-tag c4-tag-icp">{{ row.icp }}</span>
+                        {% endif %}
+                        {% if row.monetization_reason %}
+                        <div class="c4-reason">{{ row.monetization_reason[:120] }}{% if row.monetization_reason|length > 120 %}…{% endif %}</div>
+                        {% endif %}
+                    </div>
                     {% elif col in results_bool_columns %}
                     {{ "yes" if row[col] else "no" }}
                     {% elif row[col] is none %}

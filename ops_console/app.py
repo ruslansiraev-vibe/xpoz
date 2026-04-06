@@ -21,6 +21,14 @@ from starlette.responses import Response
 
 from sqlite_store import ANALYSIS_BOOL_COLUMNS, RESULT_COLUMNS
 
+# Виртуальный столбец c4_summary — третья позиция (index 2)
+def _results_display_columns() -> list[str]:
+    cols = list(RESULT_COLUMNS)
+    if "c4_summary" in cols:
+        cols.remove("c4_summary")
+    cols.insert(2, "c4_summary")
+    return cols
+
 from .config import DATA_DIR, DEPLOY_DIR, LOG_DIR, PROJECT_DIR, STATIC_DIR, TEMPLATE_DIR, get_settings
 from .registry import RunRegistry
 from .sqlite_api import SQLiteClient
@@ -645,7 +653,7 @@ def results_page(
             "sort_by": sort_by,
             "sort_dir": sort_dir,
             "error_message": error_message,
-            "results_table_columns": RESULT_COLUMNS,
+            "results_table_columns": _results_display_columns(),
             "results_bool_columns": ANALYSIS_BOOL_COLUMNS,
         },
     )
@@ -690,7 +698,7 @@ def partial_results_table(
             "sort_by": sort_by,
             "sort_dir": sort_dir,
             "error_message": error_message,
-            "results_table_columns": RESULT_COLUMNS,
+            "results_table_columns": _results_display_columns(),
             "results_bool_columns": ANALYSIS_BOOL_COLUMNS,
         },
     )

@@ -429,8 +429,11 @@ select {
     margin: 0;
     padding: 4px 0;
     max-height: min(42vh, 360px);
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-top: 1px solid var(--border);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .column-filter-list li {
@@ -453,6 +456,8 @@ select {
     cursor: pointer;
     font-size: 13px;
     color: var(--text);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .column-filter-row input {
@@ -468,7 +473,8 @@ select {
     color: var(--text);
     cursor: pointer;
     white-space: nowrap;
-    overflow-x: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .result-full-table .compact-json {
@@ -564,4 +570,64 @@ thead th {
     .sticky {
         position: static;
     }
+}
+
+/* ── C4 Summary column ───────────────────────────────────────────────────── */
+
+.c4-summary-cell {
+    min-width: 220px;
+    max-width: 300px;
+}
+
+.c4-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.c4-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    align-self: flex-start;
+}
+
+.c4-strength-strong  { background: rgba(52, 199, 89,  0.18); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.35); }
+.c4-strength-moderate{ background: rgba(255, 159, 10, 0.18); color: #ff9f0a; border: 1px solid rgba(255, 159, 10, 0.35); }
+.c4-strength-weak    { background: rgba(255, 69,  58, 0.12); color: #ff453a; border: 1px solid rgba(255, 69, 58, 0.3); }
+.c4-strength-none    { background: rgba(142, 142, 147, 0.12); color: #8e8e93; border: 1px solid rgba(142, 142, 147, 0.25); }
+
+.c4-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-size: 11px;
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    align-self: flex-start;
+}
+
+.c4-tag-funnel {
+    background: rgba(14, 165, 233, 0.12);
+    color: #7dd3fc;
+    border-color: rgba(14, 165, 233, 0.25);
+}
+
+.c4-tag-icp {
+    background: rgba(168, 85, 247, 0.12);
+    color: #d8b4fe;
+    border-color: rgba(168, 85, 247, 0.25);
+}
+
+.c4-reason {
+    font-size: 11px;
+    color: var(--muted, #888);
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-word;
 }
